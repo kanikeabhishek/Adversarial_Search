@@ -1,5 +1,6 @@
 #!/usr/bin/python2.7
 import sys
+import copy
 
 
 """
@@ -7,26 +8,33 @@ IDFS implementation
 takes inital state
 returns the best possible move
 """
-white = ['P','R','Q','K','N'];
-black = ['p','r','q','k','n'];
+white = ['P','R','Q','K','N','B'];
+black = ['p','r','q','k','n','b'];
 
 frontier = []
 
+def printable_board(board):
+    for i in board:
+        print(i)
+    print("--------------------------------------------------------------------------------------")
+
+
 def generatesuccessor(board):
+    printable_board(board)
     for i in range(0,8):
         for j in range(0,8):
             if(board[i][j] == 'P'):
                 move_parakeeth(board,i,j)
-            '''elif(board[i][j] == 'R'):
+            elif(board[i][j] == 'R'):
                 move_robin(board,i,j)
-            elif(board[i][j] == 'B'):
+            if(board[i][j] == 'B'):
                 move_bluejay(board,i,j)
             elif(board[i][j] == 'Q'):
                 move_queztal(board,i,j)
             elif(board[i][j] == 'K'):
                 move_kingfisher(board,i,j)
             elif(board[i][j] == 'N'):
-                move_nighthawk(board,i,j)'''
+                move_nighthawk(board,i,j)
 
 
 def move_vertical(board,piece,row,col):
@@ -117,20 +125,29 @@ def move_diagonal(board,row,col):
 
 def move_parakeeth(board,row,col):#not checking for quezals and first move
     print(row,col)
-    if(row+1 <=7 and col+1<=7 and col-1>=0):
+    if(row+1 <=7 and col+1<=7 ):
         if(board[row+1][col+1] in black):
-            board[row][col] = '.'
-            board[row+1][col+1] = "P"
-            frontier.append(board)
+            new_board = copy.deepcopy(board)
+            new_board[row][col] = '.'
+            new_board[row+1][col+1] = "P"
+            printable_board(new_board)
+            frontier.append(new_board)
 
+    if(row+1 <=7 and col-1>=0 ):
         if(board[row+1][col-1] in black):
-            board[row][col] = "."
-            board[row+1][col-1] = "P"
+            new_board = copy.deepcopy(board)
+            new_board[row][col] = "."
+            new_board[row+1][col-1] = "P"
+            printable_board(new_board)
             frontier.append(board)
 
-        board[row][col] = "."
-        board[row+1][col+1] = "P"
-        frontier.append(board)
+    if(row+1 <=7):
+        if(board[row+1][col] not in white):
+            new_board = copy.deepcopy(board)
+            new_board[row][col] = "."
+            new_board[row+1][col] = "P"
+            printable_board(new_board)
+            frontier.append(new_board)
 
 
 def move_robin(board,row,col):
@@ -153,7 +170,8 @@ def move_nighthawk(board,row,col):
 
 def idfs(initial_board):
     generatesuccessor(initial_board)
-    print(frontier)
+    #for i in frontier:
+    #    print(i)
 
 def create_board(initial_state):
     board = list();
@@ -170,9 +188,9 @@ def read_input():
 
 def main():
     (turn,initial_state,time) = read_input()
-    print(turn,initial_state,time)
+    #print(turn,initial_state,time)
     inital_board = create_board(initial_state)
-    print(inital_board)
+    #print(inital_board)
     idfs(inital_board)
 
 
