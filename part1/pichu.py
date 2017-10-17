@@ -18,23 +18,29 @@ def printable_board(board):
         print(i)
     print("--------------------------------------------------------------------------------------")
 
+def isValid(board, row, col):
+    if (row >= 0 and row <= 7 and col >= 0 and col <= 7 and board[row][col] not in white):
+        return True
+    return False
 
 def generatesuccessor(board):
     printable_board(board)
     for i in range(0,8):
         for j in range(0,8):
-            '''if(board[i][j] == 'P'):
-                move_parakeeth(board,i,j)'''
-            '''if(board[i][j] == 'R'):
-                move_robin(board,i,j)'''
-            '''if(board[i][j] == 'B'):
-                move_bluejay(board,i,j)'''
+            '''
+            if(board[i][j] == 'P'):
+                move_parakeeth(board,i,j)
+            if(board[i][j] == 'R'):
+                move_robin(board,i,j)
+            if(board[i][j] == 'B'):
+                move_bluejay(board,i,j)
             if(board[i][j] == 'Q'):
                 move_queztal(board,i,j)
-            '''elif(board[i][j] == 'K'):
+            '''
+            if(board[i][j] == 'K'):
                 move_kingfisher(board,i,j)
             elif(board[i][j] == 'N'):
-                move_nighthawk(board,i,j)'''
+                move_nighthawk(board,i,j)
 
 
 def move_vertical(board,piece,row,col):
@@ -196,15 +202,35 @@ def move_bluejay(board,row,col):
     move_diagonal(board,'R',row,col)
 
 def move_kingfisher(board,row,col):
-    pass
+    KingFisher_Row = [1, 1, 1, 0, -1, -1, -1, 0]
+    KingFisher_Col = [-1, 0, 1, 1, 1, 0, -1, -1]
+    for i in range(len(KingFisher_Row)):
+        row1 = row + KingFisher_Row[i]
+        col1 = col + KingFisher_Col[i]
+
+        if (isValid(board, row1, col1)):
+            new_board = copy.deepcopy(board)
+            new_board[row][col] = "."
+            new_board[row1][col1] = 'K'
+            frontier.append(new_board)
+            # printable_board(frontier[-1])
 
 def move_nighthawk(board,row,col):
-    pass
+    NightHawk_Row = [1, 2, 2, 1, -1, -2, -2, -1]
+    NightHawk_Col = [-2, -1, 1, 2, 2 ,1, -1, -2]
+    for i in range(len(NightHawk_Row)):
+        row1 = row + NightHawk_Row[i]
+        col1 = col + NightHawk_Col[i]
+
+        if (isValid(board, row1, col1)):
+            new_board = copy.deepcopy(board)
+            new_board[row][col] = "."
+            new_board[row1][col1] = 'N'
+            frontier.append(new_board)
+            # printable_board(frontier[-1])
 
 def idfs(initial_board):
     generatesuccessor(initial_board)
-    #for i in frontier:
-    #    print(i)
 
 def create_board(initial_state):
     board = list();
