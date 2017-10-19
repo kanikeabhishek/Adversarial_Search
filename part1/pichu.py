@@ -18,16 +18,32 @@ def printable_board(board):
         print(i)
     print("--------------------------------------------------------------------------------------")
 
-def isValid(board, row, col):
-    if (row >= 0 and row <= 7 and col >= 0 and col <= 7 and board[row][col] not in white):
-        return True
+def isValidForParakeeth(board, row, col, i):
+    if (row >= 0 and row <= 7 and col >= 0 and col <= 7):
+        if i == 3:
+            if board[row-1][col] == "." and board[row][col] == ".":
+                return True
+        elif i % 2 == 0 and board[row][col] in black:
+            return True
+        elif i == 1 and board[row][col] == ".":
+            return True
+    return False
+
+def isValidorDisbale(board, row, col, row_list, col_list, i):
+    if (row >= 0 and row <= 7 and col >= 0 and col <= 7):
+        if board[row][col] == ".":
+            return True
+        row_list[i] *= 100; col_list[i] *= 100
+        if board[row][col] in black:
+            return True
+        else:
+            return False
     return False
 
 def generatesuccessor(board):
     printable_board(board)
     for i in range(0,8):
         for j in range(0,8):
-            '''
             if(board[i][j] == 'P'):
                 move_parakeeth(board,i,j)
             if(board[i][j] == 'R'):
@@ -36,198 +52,60 @@ def generatesuccessor(board):
                 move_bluejay(board,i,j)
             if(board[i][j] == 'Q'):
                 move_queztal(board,i,j)
-            '''
             if(board[i][j] == 'K'):
                 move_kingfisher(board,i,j)
             elif(board[i][j] == 'N'):
                 move_nighthawk(board,i,j)
 
+def move_parakeeth(board,row,col):#not checking for quezals
+    Parakeeth_Row = [1, 1, 1, 2]
+    Parakeeth_Col = [-1, 0, 1, 0]
 
-def move_vertical(board,piece,row,col):
-    possible_moves = [1,2,3,4,5,6,7]
-    print(row,col)
-    for i in possible_moves:
-        if(row+i <= 7):
-            if(board[row+i][col] not in white):
-                new_board = copy.deepcopy(board)
-                current_piece = board[row+i][col]
-                new_board[row][col] = "."
-                new_board[row+i][col] = piece
-                printable_board(new_board)
-                frontier.append(new_board)
-                if(current_piece in black):
-                    break
-            else:
-                break
-
-    for i in possible_moves:
-        if(row-i >=0):
-            if(board[row-i][col] not in white):
-                new_board = copy.deepcopy(board)
-                current_piece = board[row-i][col]
-                new_board[row][col] = "."
-                new_board[row-i][col] = piece
-                printable_board(new_board)
-                frontier.append(new_board)
-                if(current_piece in black):
-                    break
-            else:
-                break
-
-def move_hortizontal(board,piece,row,col):
-    possible_moves = [1,2,3,4,5,6,7]
-    for i in possible_moves:
-        if(col+i <= 7 ):
-            if(board[row][col+i] not in white):
-                new_board = copy.deepcopy(board)
-                current_piece = board[row][col+i]
-                new_board[row][col] = "."
-                new_board[row][col+i] = piece
-                printable_board(new_board)
-                frontier.append(new_board)
-                if(current_piece in black):
-                    break
-            else:
-                break
-    for i in possible_moves:
-        if(col-i >=0):
-            if(board[row][col-i] not in white):
-                new_board = copy.deepcopy(board)
-                current_piece = board[row][col-i]
-                new_board[row][col] = "."
-                new_board[row][col-i] = piece
-                printable_board(new_board)
-                frontier.append(new_board)
-                if(current_piece in black):
-                    break
-            else:
-                break
-
-
-def move_diagonal(board,piece,row,col):
-    possible_moves = [1,2,3,4,5,6,7]
-    for i in possible_moves:
-        if(row+i<=7 and col+i <=7):
-            if(board[row+i][col+i] not in white):
-                new_board = copy.deepcopy(board)
-                current_piece = board[row+i][col+i]
-                new_board[row][col] = "."
-                new_board[row+i][col+i] = piece
-                printable_board(new_board)
-                frontier.append(new_board)
-                if(current_piece in black):
-                    break
-            else:
-                break
-    for i in possible_moves:
-        if(row-i>=0 and col-i>=0):
-            if(board[row-i][col-i] not in white):
-                new_board = copy.deepcopy(board)
-                current_piece = board[row-i][col-i]
-                new_board[row][col] = "."
-                new_board[row-i][col-i] = piece
-                printable_board(new_board)
-                frontier.append(new_board)
-                if(current_piece in black):
-                    break
-            else:
-                break
-
-    for i in possible_moves:
-        if(row-i >=0 and col+i<=7):
-            if(board[row-i][col+i] not in white):
-                new_board = copy.deepcopy(board)
-                current_piece = board[row-i][col+i]
-                new_board[row][col] = "."
-                new_board[row-i][col+i] = piece
-                printable_board(new_board)
-                frontier.append(new_board)
-                if(current_piece in black):
-                    break
-            else:
-                break
-
-    for i in possible_moves:
-        if(row+i <=7 and col-i>=0):
-            if(board[row+i][col-i] not in white):
-                new_board = copy.deepcopy(board)
-                current_piece = board[row+i][col-i]
-                new_board[row][col] = "."
-                new_board[row+i][col-i] = piece
-                printable_board(new_board)
-                frontier.append(new_board)
-                if(current_piece in black):
-                    break
-            else:
-                break
-
-
-def move_parakeeth(board,row,col):#not checking for quezals and first move
-    print(row,col)
-    if(row+1 <=7 and col+1<=7 ):
-        if(board[row+1][col+1] in black):
-            new_board = copy.deepcopy(board)
-            new_board[row][col] = '.'
-            new_board[row+1][col+1] = "P"
-            printable_board(new_board)
-            frontier.append(new_board)
-
-    if(row+1 <=7 and col-1>=0 ):
-        if(board[row+1][col-1] in black):
+    for i in range(0, len(Parakeeth_Row)):
+        row1 = row + Parakeeth_Row[i]
+        col1 = col + Parakeeth_Col[i]
+        if (isValidForParakeeth(board, row1, col1, i)):
             new_board = copy.deepcopy(board)
             new_board[row][col] = "."
-            new_board[row+1][col-1] = "P"
-            printable_board(new_board)
-            frontier.append(board)
-
-    if(row+1 <=7):
-        if(board[row+1][col] not in white):
-            new_board = copy.deepcopy(board)
-            new_board[row][col] = "."
-            new_board[row+1][col] = "P"
-            printable_board(new_board)
+            new_board[row1][col1] = "P"
             frontier.append(new_board)
+            printable_board(frontier[-1])
 
-
-def move_robin(board,row,col):
-    move_vertical(board,'R',row,col)
-    move_hortizontal(board,'R',row,col)
+def moveBird(board, row, col, possible_row, possible_col, possible_moves, iterations, bird):
+    for i in range(possible_moves):
+        for j in range(1, iterations):
+            row1 = row + possible_row[i] * j
+            col1 = col + possible_col[i] * j
+            if (isValidorDisbale(board, row1, col1, possible_row, possible_col, i)):
+                new_board = copy.deepcopy(board)
+                new_board[row][col] = "."
+                new_board[row1][col1] = bird
+                frontier.append(new_board)
 
 def move_queztal(board,row,col):
-    move_vertical(board,'Q',row,col)
-    move_hortizontal(board,'Q',row,col)
-    move_diagonal(board,'Q',row,col)
+    Queztal_Row = [-1, -1, -1, 0, 1, 1, 1, 0]
+    Queztal_Col = [-1, 0, 1, 1, 1, 0, -1, -1]
+    moveBird(board, row, col, Queztal_Row, Queztal_Col, len(Queztal_Row), 8, 'Q')
 
 def move_bluejay(board,row,col):
-    move_diagonal(board,'R',row,col)
+    BlueJay_Row = [-1, -1, 1, 1]
+    BlueJay_Col = [-1, 1, 1, -1]
+    moveBird(board, row, col, BlueJay_Row, BlueJay_Col, len(BlueJay_Row), 8, 'B')
+
+def move_robin(board,row,col):
+    Robin_Row = [0, -1, 0, 1]
+    Robin_Col = [-1, 0, 1, 0]
+    moveBird(board, row, col, Robin_Row, Robin_Col, len(Robin_Row), 8, 'R')
 
 def move_kingfisher(board,row,col):
     KingFisher_Row = [1, 1, 1, 0, -1, -1, -1, 0]
     KingFisher_Col = [-1, 0, 1, 1, 1, 0, -1, -1]
-    for i in range(len(KingFisher_Row)):
-        row1 = row + KingFisher_Row[i]
-        col1 = col + KingFisher_Col[i]
-
-        if (isValid(board, row1, col1)):
-            new_board = copy.deepcopy(board)
-            new_board[row][col] = "."
-            new_board[row1][col1] = 'K'
-            frontier.append(new_board)
-            # printable_board(frontier[-1])
+    moveBird(board, row, col, KingFisher_Row, KingFisher_Col, len(KingFisher_Row), 0, 'K')
 
 def move_nighthawk(board,row,col):
     NightHawk_Row = [1, 2, 2, 1, -1, -2, -2, -1]
     NightHawk_Col = [-2, -1, 1, 2, 2 ,1, -1, -2]
-    for i in range(len(NightHawk_Row)):
-        row1 = row + NightHawk_Row[i]
-        col1 = col + NightHawk_Col[i]
-
-        if (isValid(board, row1, col1)):
-            new_board = copy.deepcopy(board)
-            new_board[row][col] = "."
-            new_board[row1][col1] = 'N'
-            frontier.append(new_board)
-            # printable_board(frontier[-1])
+    moveBird(board, row, col, NightHawk_Row, NightHawk_Col, len(NightHawk_Row), 0, 'N')
 
 def idfs(initial_board):
     generatesuccessor(initial_board)
