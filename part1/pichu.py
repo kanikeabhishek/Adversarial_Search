@@ -44,6 +44,7 @@ def generatesuccessor(board):
     printable_board(board)
     for i in range(0,8):
         for j in range(0,8):
+            '''
             if(board[i][j] == 'P'):
                 move_parakeeth(board,i,j)
             if(board[i][j] == 'R'):
@@ -54,7 +55,8 @@ def generatesuccessor(board):
                 move_queztal(board,i,j)
             if(board[i][j] == 'K'):
                 move_kingfisher(board,i,j)
-            elif(board[i][j] == 'N'):
+            '''
+            if(board[i][j] == 'N'):
                 move_nighthawk(board,i,j)
 
 def move_parakeeth(board,row,col):#not checking for quezals
@@ -81,6 +83,7 @@ def moveBird(board, row, col, possible_row, possible_col, possible_moves, iterat
                 new_board[row][col] = "."
                 new_board[row1][col1] = bird
                 frontier.append(new_board)
+                printable_board(frontier[-1])
 
 def move_queztal(board,row,col):
     Queztal_Row = [-1, -1, -1, 0, 1, 1, 1, 0]
@@ -100,12 +103,12 @@ def move_robin(board,row,col):
 def move_kingfisher(board,row,col):
     KingFisher_Row = [1, 1, 1, 0, -1, -1, -1, 0]
     KingFisher_Col = [-1, 0, 1, 1, 1, 0, -1, -1]
-    moveBird(board, row, col, KingFisher_Row, KingFisher_Col, len(KingFisher_Row), 0, 'K')
+    moveBird(board, row, col, KingFisher_Row, KingFisher_Col, len(KingFisher_Row), 2, 'K')
 
 def move_nighthawk(board,row,col):
     NightHawk_Row = [1, 2, 2, 1, -1, -2, -2, -1]
     NightHawk_Col = [-2, -1, 1, 2, 2 ,1, -1, -2]
-    moveBird(board, row, col, NightHawk_Row, NightHawk_Col, len(NightHawk_Row), 0, 'N')
+    moveBird(board, row, col, NightHawk_Row, NightHawk_Col, len(NightHawk_Row), 2, 'N')
 
 def idfs(initial_board):
     generatesuccessor(initial_board)
