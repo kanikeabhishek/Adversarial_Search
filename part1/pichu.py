@@ -66,9 +66,14 @@ def generatesuccessor(board,player):
     return frontier
 
 def move_parakeeth(board,p,row,col):
-    '''TBD:check for quezals and black pawn movements'''
 
-    Parakeeth_Row = [1, 1, 1, 2]
+    if p in black:
+        q= 'q'
+        Parakeeth_Row = [-1, -1, -1, -2]
+    else:
+        q= 'Q'
+        Parakeeth_Row = [1, 1, 1, 2]
+
     Parakeeth_Col = [-1, 0, 1, 0]
 
     for i in range(0, len(Parakeeth_Row)):
@@ -77,7 +82,10 @@ def move_parakeeth(board,p,row,col):
         if (isValidForParakeeth(board, row1, col1, i)):
             new_board = copy.deepcopy(board)
             new_board[row][col] = "."
-            new_board[row1][col1] = p
+            if(row1 == 0 or row1 == 7):
+                new_board[row1][col1] = q
+            else:
+                new_board[row1][col1] = p
             frontier.append(new_board)
             printable_board(frontier[-1])
 
