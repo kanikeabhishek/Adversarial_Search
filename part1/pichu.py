@@ -16,6 +16,7 @@ def printable_board(board):
     for i in board:
         print(i)
     print("--------------------------------------------------------------------------------------")
+    pass
 
 def isValidForParakeeth(board, row, col, i):
     if (row >= 0 and row <= 7 and col >= 0 and col <= 7):
@@ -130,8 +131,8 @@ def aplha_beta_decision(initial_board,player):
     #generatesuccessor(initial_board,player)#comment and uncomment aplha beta algo
     maxi = -9999
     state = []
-    for successor in generatesuccessor(initial_board,player):
-         beta = mini_value(successor,1,-9999,9999,not player)
+    for successor in generatesuccessor(initial_board,not player):
+         beta = mini_value(successor,1,-9999,9999,player)
          if(maxi < beta):
             state = successor
             maxi = beta
@@ -141,8 +142,10 @@ def max_value(state,depth,alpha,beta,player):
     if(depth == maxdepth):
         return evaluation_function(state)
     else:
+        max_alpha = -9999
         for successor in generatesuccessor(state,player):
-            alpha = max(alpha,mini_value(successor,depth+1,alpha,beta,not player))
+            max_alpha = max(max_alpha,mini_value(successor,depth+1,alpha,beta,not player))
+            alpha = max(alpha,max_alpha)
             if(alpha >= beta):
                 return alpha
     return alpha
@@ -152,14 +155,17 @@ def mini_value(state,depth,alpha,beta,player):
     if(depth == maxdepth):
         return evaluation_function(state)
     else:
+        min_beta = 9999
         for successor in generatesuccessor(state,player):
-            beta = min(alpha,max_value(successor,depth+1,alpha,beta,not player))
+            min_beta = min(min_beta,max_value(successor,depth+1,alpha,beta,not player))
+            beta = min(min_beta,beta)
             if(beta <= alpha):
                 return beta
+    print(alpha,beta)
     return beta
 
 def evaluation_function(board):
-    print("Do evaluation function")
+    #print("Do evaluation function")
     pass
 
 def identify_opponent(player):
@@ -188,18 +194,19 @@ def read_input():
 def main():
     (turn,initial_state,time) = read_input()
     if (len(initial_state) != 64):
-        print(len(initial_state))
+        #print(len(initial_state))
         return -1
     inital_board = create_board(initial_state)
-    print("***** inital_board****************")
+    #print("***** inital_board****************")
     printable_board(inital_board)
-    print("********************************")
+    #print("********************************")
     if turn == 'w':
         player = True
     else:
         player = False
 
-    aplha_beta_decision(inital_board,player)
+    next_move = aplha_beta_decision(inital_board,player)
+    printable_board(next_move)
 
 if __name__=="__main__":
     main()
