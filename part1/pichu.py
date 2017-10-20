@@ -6,11 +6,13 @@ import copy
 white = ['P','R','B','Q','K','N'];
 black = ['p','r','b','q','k','n'];
 
-me = []# not in use now can be removed or used later.
+# `me` not in use now can be removed or used later.
+me = []
+
 opposition = []
 
 frontier = []
-maxdepth = 2
+maxdepth = int(sys.argv[4])
 
 def printable_board(board):
     for i in board:
@@ -34,7 +36,6 @@ def isValidorDisbale(board, row, col, row_list, col_list, i):
         if board[row][col] == ".":
             return True
         row_list[i] *= 100; col_list[i] *= 100
-        #print(opposition)
         if board[row][col] in opposition:
             return True
         else:
@@ -42,7 +43,7 @@ def isValidorDisbale(board, row, col, row_list, col_list, i):
 
 def generatesuccessor(board,player):
     global frontier
-    del frontier[:]
+    frontier = []
     identify_opponent(player)
 
     if player:
@@ -88,7 +89,6 @@ def move_parakeeth(board,p,row,col):
             else:
                 new_board[row1][col1] = p
             frontier.append(new_board)
-            printable_board(frontier[-1])
 
 def moveBird(board, row, col, possible_row, possible_col, possible_moves, iterations, bird):
     for i in range(possible_moves):
@@ -100,7 +100,6 @@ def moveBird(board, row, col, possible_row, possible_col, possible_moves, iterat
                 new_board[row][col] = "."
                 new_board[row1][col1] = bird
                 frontier.append(new_board)
-                printable_board(frontier[-1])
 
 def move_queztal(board,q,row,col):
     Queztal_Row = [-1, -1, -1, 0, 1, 1, 1, 0]
@@ -128,7 +127,7 @@ def move_nighthawk(board,n,row,col):
     moveBird(board, row, col, NightHawk_Row, NightHawk_Col, len(NightHawk_Row), 2, n)
 
 def aplha_beta_decision(initial_board,player):
-    #generatesuccessor(initial_board,player)#comment and uncomment aplha beta algo
+    # generatesuccessor(initial_board,player)#comment and uncomment aplha beta algo
     maxi = -9999
     state = []
     for successor in generatesuccessor(initial_board,not player):
@@ -140,12 +139,11 @@ def aplha_beta_decision(initial_board,player):
 
 def max_value(state,depth,alpha,beta,player):
     if(depth == maxdepth):
-        return evaluation_function(state)
+        return evaluation_function1(state)
     else:
         max_alpha = -9999
         for successor in generatesuccessor(state,player):
-            max_alpha = max(max_alpha,mini_value(successor,depth+1,alpha,beta,not player))
-            alpha = max(alpha,max_alpha)
+            alpha = max(alpha,mini_value(successor,depth+1,alpha,beta,not player))
             if(alpha >= beta):
                 return alpha
     return alpha
@@ -153,20 +151,118 @@ def max_value(state,depth,alpha,beta,player):
 def mini_value(state,depth,alpha,beta,player):
 
     if(depth == maxdepth):
-        return evaluation_function(state)
+        return evaluation_function1(state)
     else:
         min_beta = 9999
         for successor in generatesuccessor(state,player):
-            min_beta = min(min_beta,max_value(successor,depth+1,alpha,beta,not player))
-            beta = min(min_beta,beta)
-            if(beta <= alpha):
+            beta = min(beta,max_value(successor,depth+1,alpha,beta,not player))
+            if(alpha >= beta):
                 return beta
-    print(alpha,beta)
     return beta
 
+def kingPosistions(board):
+    for i in range(0,8):
+        for j in range(0,8):
+            if (board[i][j] == 'K'):
+                king_white = (i,j)
+            if (board[i][j] == 'K'):
+                king_black = (i,j)
+    return (king_white, king_black)
+
 def evaluation_function(board):
-    #print("Do evaluation function")
-    pass
+    value = 0
+    for i in range(0,8):
+        for j in range(0,8):
+            if board[i][j] == 'P':
+                value += 1
+            if board[i][j] == 'p':
+                value -= 1
+            if board[i][j] == 'R':
+                value += 5
+            if board[i][j] == 'r':
+                value -= 5
+            if board[i][j] == 'B':
+                value += 3
+            if board[i][j] == 'b':
+                value -= 3
+            if board[i][j] == 'N':
+                value += 3
+            if board[i][j] == 'n':
+                value -= 3
+            if board[i][j] == 'Q':
+                value += 9
+            if board[i][j] == 'q':
+                value -= 9
+            if board[i][j] == 'K':
+                value += 100
+            if board[i][j] == 'k':
+                value -= 100
+    return value
+
+piece_square_table = {
+    'P': [[[0,  0,  0,  0,  0,  0,  0,  0],
+         [50, 50, 50, 50, 50, 50, 50, 50],
+         [10, 10, 20, 30, 30, 20, 10, 10],
+         [5,  5, 10, 25, 25, 10,  5,  5],
+         [0,  0,  0, 20, 20,  0,  0,  0],
+         [5, -5,-10,  0,  0,-10, -5,  5],
+         [5, 10, 10,-20,-20, 10, 10,  5],
+         [0,  0,  0,  0,  0,  0,  0,  0]], 100],
+    'N': [[[-50,-40,-30,-30,-30,-30,-40,-50],
+         [-40,-20,  0,  0,  0,  0,-20,-40],
+         [-30,  0, 10, 15, 15, 10,  0,-30],
+         [-30,  5, 15, 20, 20, 15,  5,-30],
+         [-30,  0, 15, 20, 20, 15,  0,-30],
+         [-30,  5, 10, 15, 15, 10,  5,-30],
+         [-40,-20,  0,  5,  5,  0,-20,-40],
+         [-50,-40,-30,-30,-30,-30,-40,-50]], 320],
+    'B': [[[-20,-10,-10,-10,-10,-10,-10,-20],
+         [-10,  0,  0,  0,  0,  0,  0,-10],
+         [-10,  0,  5, 10, 10,  5,  0,-10],
+         [-10,  5,  5, 10, 10,  5,  5,-10],
+         [-10,  0, 10, 10, 10, 10,  0,-10],
+         [-10, 10, 10, 10, 10, 10, 10,-10],
+         [-10,  5,  0,  0,  0,  0,  5,-10],
+         [-20,-10,-10,-10,-10,-10,-10,-20]], 330],
+    'R': [[[0,  0,  0,  0,  0,  0,  0,  0],
+         [ 5, 10, 10, 10, 10, 10, 10,  5],
+         [-5,  0,  0,  0,  0,  0,  0, -5],
+         [-5,  0,  0,  0,  0,  0,  0, -5],
+         [-5,  0,  0,  0,  0,  0,  0, -5],
+         [-5,  0,  0,  0,  0,  0,  0, -5],
+         [-5,  0,  0,  0,  0,  0,  0, -5],
+         [ 0,  0,  0,  5,  5,  0,  0,  0]], 500],
+    'Q': [[[-20,-10,-10, -5, -5,-10,-10,-20],
+         [-10,  0,  0,  0,  0,  0,  0,-10],
+         [-10,  0,  5,  5,  5,  5,  0,-10],
+         [-5,  0,  5,  5,  5,  5,  0, -5],
+         [0,  0,  5,  5,  5,  5,  0, -5],
+         [-10,  5,  5,  5,  5,  5,  0,-10],
+         [-10,  0,  5,  0,  0,  0,  0,-10],
+         [-20,-10,-10, -5, -5,-10,-10,-20]], 900],
+    'K': [[[-30,-40,-40,-50,-50,-40,-40,-30],
+         [-30,-40,-40,-50,-50,-40,-40,-30],
+         [-30,-40,-40,-50,-50,-40,-40,-30],
+         [-30,-40,-40,-50,-50,-40,-40,-30],
+         [-20,-30,-30,-40,-40,-30,-30,-20],
+         [-10,-20,-20,-20,-20,-20,-20,-10],
+         [20, 20,  0,  0,  0,  0, 20, 20],
+         [20, 30, 10,  0,  0, 10, 30, 20]], 20000]
+}
+
+def evaluation_function1(board):
+    score = 0
+    for row in range(0, 8):
+        for col in range(0, 8):
+            current_piece = board[row][col]
+            if current_piece.upper() in piece_square_table.keys():
+                if current_piece.istitle():
+                    row1 = ( row * -1 ) - 1
+                    score += (piece_square_table[current_piece][0][row1][col] * piece_square_table[current_piece][1])
+                else:
+                    current_piece = current_piece.upper()
+                    score -= (piece_square_table[current_piece][0][row][col] * piece_square_table[current_piece][1])
+    return score
 
 def identify_opponent(player):
     global me
@@ -194,12 +290,11 @@ def read_input():
 def main():
     (turn,initial_state,time) = read_input()
     if (len(initial_state) != 64):
-        #print(len(initial_state))
         return -1
     inital_board = create_board(initial_state)
-    #print("***** inital_board****************")
+    print("***** inital_board****************")
     printable_board(inital_board)
-    #print("********************************")
+    print("********************************")
     if turn == 'w':
         player = True
     else:
@@ -207,6 +302,7 @@ def main():
 
     next_move = aplha_beta_decision(inital_board,player)
     printable_board(next_move)
+    print (len(next_move))
 
 if __name__=="__main__":
     main()
