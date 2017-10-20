@@ -128,10 +128,10 @@ def move_nighthawk(board,n,row,col):
 
 def aplha_beta_decision(initial_board,player):
     # generatesuccessor(initial_board,player)#comment and uncomment aplha beta algo
-    maxi = -9999
+    maxi = -99999999999
     state = []
-    for successor in generatesuccessor(initial_board,not player):
-         beta = mini_value(successor,1,-9999,9999,player)
+    for successor in generatesuccessor(initial_board, player):
+         beta = mini_value(successor, 1, -99999999999, 99999999999, not player)
          if(maxi < beta):
             state = successor
             maxi = beta
@@ -139,11 +139,10 @@ def aplha_beta_decision(initial_board,player):
 
 def max_value(state,depth,alpha,beta,player):
     if(depth == maxdepth):
-        return evaluation_function1(state)
+        return piece_square_evaluation(state)
     else:
-        max_alpha = -9999
-        for successor in generatesuccessor(state,player):
-            alpha = max(alpha,mini_value(successor,depth+1,alpha,beta,not player))
+        for successor in generatesuccessor(state, player):
+            alpha = max(alpha,mini_value(successor, depth+1, alpha, beta, not player))
             if(alpha >= beta):
                 return alpha
     return alpha
@@ -151,11 +150,10 @@ def max_value(state,depth,alpha,beta,player):
 def mini_value(state,depth,alpha,beta,player):
 
     if(depth == maxdepth):
-        return evaluation_function1(state)
+        return piece_square_evaluation(state)
     else:
-        min_beta = 9999
-        for successor in generatesuccessor(state,player):
-            beta = min(beta,max_value(successor,depth+1,alpha,beta,not player))
+        for successor in generatesuccessor(state, player):
+            beta = min(beta,max_value(successor, depth+1, alpha, beta, not player))
             if(alpha >= beta):
                 return beta
     return beta
@@ -165,11 +163,11 @@ def kingPosistions(board):
         for j in range(0,8):
             if (board[i][j] == 'K'):
                 king_white = (i,j)
-            if (board[i][j] == 'K'):
+            if (board[i][j] == 'k'):
                 king_black = (i,j)
     return (king_white, king_black)
 
-def evaluation_function(board):
+def material_evaluation(board):
     value = 0
     for i in range(0,8):
         for j in range(0,8):
@@ -250,7 +248,7 @@ piece_square_table = {
          [20, 30, 10,  0,  0, 10, 30, 20]], 20000]
 }
 
-def evaluation_function1(board):
+def piece_square_evaluation(board):
     score = 0
     for row in range(0, 8):
         for col in range(0, 8):
@@ -292,17 +290,19 @@ def main():
     if (len(initial_state) != 64):
         return -1
     inital_board = create_board(initial_state)
-    print("***** inital_board****************")
+    print("\n********************************** INITIAL BOARD **************************************")
     printable_board(inital_board)
-    print("********************************")
+    print("**************************************************************************************\n")
     if turn == 'w':
         player = True
     else:
         player = False
 
     next_move = aplha_beta_decision(inital_board,player)
+
+    print("\n*********************************** FINAL BOARD **************************************")
     printable_board(next_move)
-    print (len(next_move))
+    print("**************************************************************************************\n")
 
 if __name__=="__main__":
     main()
