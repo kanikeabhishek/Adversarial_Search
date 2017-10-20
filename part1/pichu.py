@@ -67,8 +67,10 @@ def generatesuccessor(board,player):
                 move_nighthawk(board,n,i,j)
     return frontier
 
-def move_parakeeth(board,p,row,col):
+def add_piece(board, row, col, piece):
+    return board[0:row] + [board[row][0:col] + [piece,] + board[row][col+1:]] + board[row+1:]
 
+def move_parakeeth(board,p,row,col):
     if p in black:
         q= 'q'
         Parakeeth_Row = [-1, -1, -1, -2]
@@ -82,12 +84,11 @@ def move_parakeeth(board,p,row,col):
         row1 = row + Parakeeth_Row[i]
         col1 = col + Parakeeth_Col[i]
         if (isValidForParakeeth(board, row1, col1, i)):
-            new_board = copy.deepcopy(board)
-            new_board[row][col] = "."
+            new_board = add_piece(board, row, col, ".")
             if(row1 == 0 or row1 == 7):
-                new_board[row1][col1] = q
+                new_board = add_piece(new_board, row1, col1, q)
             else:
-                new_board[row1][col1] = p
+                new_board = add_piece(new_board, row1, col1, p)
             frontier.append(new_board)
 
 def moveBird(board, row, col, possible_row, possible_col, possible_moves, iterations, bird):
@@ -96,9 +97,8 @@ def moveBird(board, row, col, possible_row, possible_col, possible_moves, iterat
             row1 = row + possible_row[i] * j
             col1 = col + possible_col[i] * j
             if (isValidorDisbale(board, row1, col1, possible_row, possible_col, i)):
-                new_board = copy.deepcopy(board)
-                new_board[row][col] = "."
-                new_board[row1][col1] = bird
+                new_board = add_piece(board, row, col, ".")
+                new_board = add_piece(new_board, row1, col1, bird)
                 frontier.append(new_board)
 
 def move_queztal(board,q,row,col):
