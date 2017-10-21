@@ -303,6 +303,11 @@ def main():
     print("\n*********************************** FINAL BOARD **************************************")
     printable_board(next_move)
     print("**************************************************************************************\n")
+    next_move_str = ''
+    for i in range(0,8):
+        for j in range(0,8):
+            next_move_str += next_move[i][j]
+    print(next_move_str)
 
 if __name__=="__main__":
     main()
