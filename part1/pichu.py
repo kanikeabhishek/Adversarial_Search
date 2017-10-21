@@ -126,6 +126,18 @@ def move_nighthawk(board,n,row,col):
     NightHawk_Col = [-2, -1, 1, 2, 2 ,1, -1, -2]
     moveBird(board, row, col, NightHawk_Row, NightHawk_Col, len(NightHawk_Row), 2, n)
 
+def iskingcaptured(board,player):
+    if(player):
+        king = 'K'
+    else:
+        king = 'k'
+
+    for i in range(0,8):
+        for j in range(0,8):
+            if(board[i][j] == king):
+                return False
+    return True
+
 def aplha_beta_decision(initial_board,player):
     # generatesuccessor(initial_board,player)#comment and uncomment aplha beta algo
     maxi = -99999999999
@@ -138,7 +150,10 @@ def aplha_beta_decision(initial_board,player):
     return state
 
 def max_value(state,depth,alpha,beta,player):
-    if(depth == maxdepth):
+    if(iskingcaptured(state,player)):
+        return -99999999999
+
+    if(depth == maxdepth ):
         return piece_square_evaluation(state)
     else:
         for successor in generatesuccessor(state, player):
@@ -148,6 +163,9 @@ def max_value(state,depth,alpha,beta,player):
     return alpha
 
 def mini_value(state,depth,alpha,beta,player):
+
+    if(iskingcaptured(state,player)):
+        return 99999999999
 
     if(depth == maxdepth):
         return piece_square_evaluation(state)
@@ -304,6 +322,7 @@ def main():
     printable_board(next_move)
     print("**************************************************************************************\n")
     next_move_str = ''
+    piece = ''
     for i in range(0,8):
         for j in range(0,8):
             next_move_str += next_move[i][j]
