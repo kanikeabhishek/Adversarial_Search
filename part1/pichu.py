@@ -322,7 +322,6 @@ def main():
     printable_board(next_move)
     print("**************************************************************************************\n")
     next_move_str = ''
-    piece = ''
     for i in range(0,8):
         for j in range(0,8):
             next_move_str += next_move[i][j]
