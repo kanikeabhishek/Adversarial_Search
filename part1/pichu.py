@@ -144,7 +144,7 @@ def aplha_beta_decision(initial_board,player):
     state = []
     for successor in generatesuccessor(initial_board, player):
          beta = mini_value(successor, 1, -99999999999, 99999999999, not player)
-         if(maxi < beta):
+         if(maxi <= beta):
             state = successor
             maxi = beta
     return state
@@ -155,6 +155,8 @@ def max_value(state,depth,alpha,beta,player):
 
     if(depth == maxdepth ):
         return piece_square_evaluation(state)
+        #return mobility_evaluation(state,player)
+
     else:
         for successor in generatesuccessor(state, player):
             alpha = max(alpha,mini_value(successor, depth+1, alpha, beta, not player))
@@ -169,6 +171,7 @@ def mini_value(state,depth,alpha,beta,player):
 
     if(depth == maxdepth):
         return piece_square_evaluation(state)
+        #return mobility_evaluation(state,player)
     else:
         for successor in generatesuccessor(state, player):
             beta = min(beta,max_value(successor, depth+1, alpha, beta, not player))
@@ -279,6 +282,11 @@ def piece_square_evaluation(board):
                     current_piece = current_piece.upper()
                     score -= (piece_square_table[current_piece][0][row][col] * piece_square_table[current_piece][1])
     return score
+
+def mobility_evaluation(board,player):
+    legal_moves = len(generatesuccessor(board,player))
+    legal_moves_opponent = len(generatesuccessor(board,not player))
+    return legal_moves - legal_moves_opponent
 
 def identify_opponent(player):
     global me
