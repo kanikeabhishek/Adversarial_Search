@@ -20,11 +20,15 @@ def printable_board(board):
     print("--------------------------------------------------------------------------------------")
     pass
 
-def isValidForParakeeth(board, row, col, i):
+def isValidForParakeeth(board, row, col, i, player):
     if (row >= 0 and row <= 7 and col >= 0 and col <= 7):
         if i == 3:
-            if board[row-1][col] == "." and board[row][col] == ".":
-                return True
+            if(player):
+                if board[row - 1][col] == "." and board[row][col] == "." and row - 2 == 1:
+                    return True
+            else:
+                if board[row + 1][col] == "." and board[row][col] == "." and row + 2 == 6:
+                    return True
         elif i % 2 == 0 and board[row][col] in opposition:
             return True
         elif i == 1 and board[row][col] == ".":
@@ -87,7 +91,7 @@ def move_parakeeth(board, p, row, col):
     for i in range(0, len(Parakeeth_Row)):
         row1 = row + Parakeeth_Row[i]
         col1 = col + Parakeeth_Col[i]
-        if (isValidForParakeeth(board, row1, col1, i)):
+        if (isValidForParakeeth(board, row1, col1, i, p in WHITE)):
             new_board = add_piece(board, row, col, ".")
             if(row1 == 0 or row1 == 7):
                 new_board = add_piece(new_board, row1, col1, q)
