@@ -61,7 +61,7 @@ import copy
 import heapq
 import sys
 import time
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 #from nltk.corpus import stopwords
 #cachedStopWords = stopwords.words("english")
 
