@@ -13,12 +13,11 @@
 # If the line was started with a city, the training set was split into a city_list and
 # a tweet_list. For each tweet in the tweet_list, we removed selected symbols
 # '$%|<>;^&*+={}~@,:()[\]_/\-".' , and remove word that appears in the filtered_word list.
-# Some symbol was not included(like '#'), because by removing those will lower the accuracy.
+# Some symbols were not included(like '#'), because by removing those will lower the accuracy.
 # The filtered_word list includes stop words, and also words with high frequency in every location,
-# and by removing these words, the accuracy wouldn't be affected or we would get a better accuracy
-# on the test set.
-# A function to filter the frequency of words was barely used was not used simply because
-# better accuracy will be given if no threshold set.
+# and by removing these words, the accuracy wouldn't be affected or would be improved.
+# A function to filter the frequency of words was barely used simply because a better accuracy
+# will be given if no threshold was set.
 #
 # Model Training
 # The next step is to train the model. with the training set, I construct a nested dictionary.
@@ -34,9 +33,10 @@
 #
 # One is the term frequency, which calculates P(w|L) using
 # (word count in each location + a )/ (The total number of words in a location + a*total number of all distinct words)
-# where 'a' is the smoothing parameter. It is set to 0.04 for the best results. The classifier
-# takes 3.89108490944 second (including training and classifying), and return the accuracy of 0.702
-# (It could increase to 0.704 if we include the symbol ')', but I don't find a reasonable explanation to keep it).
+# where 'a' is the smoothing parameter. A plot was draw to determine the best a (Smoothing parameter & Error rate.png),
+# and it is set to 0.04 for the best results. The classifier takes 3.89108490944 second (including training
+# and classifying), and return the accuracy of 0.702 (It could increase to 0.704 if we include the symbol ')',
+# but I didn't find a reasonable explanation to keep it).
 #
 # The other one is tf-idf, which calculates weighted term frequency. First, I normalized the
 # term frequency, by dividing the (word count in each location) with sqrt(The total number of terms in a location).
@@ -49,6 +49,9 @@
 # Output
 # The top 5 words associated with each of the 12 locations are the words with highest P(w|L=l) for each location.
 # Most of the words associate with the location are the abbreviation or nickname, or the state name of the city.
+# Be aware that the output file will include some blank lines, this is due to ASCII characters. I didn't remove those
+# because I want keep the file format the same as the original dataset.
+#
 
 from __future__ import division
 import string
@@ -58,6 +61,7 @@ import copy
 import heapq
 import sys
 import time
+from matplotlib import pyplot as plt
 #from nltk.corpus import stopwords
 #cachedStopWords = stopwords.words("english")
 
@@ -199,7 +203,7 @@ def get_error(classified_list, test_label):
         # print classify[n], list_2[n]
         if classified_list[n] != test_label[n]:
             count += 1
-    return 'error rate: ' +  str(count / len(classified_list))
+    return count / len(classified_list)
 
 
 def write_output(original_file,filename,classified_list):
@@ -305,21 +309,21 @@ def main():
     #print time.time()-start
 
 
+    # code to draw plot finding the best a
+    # a=[]
+    # error =[]
+    # for a_0 in range(1, 10):
+    #     a.append(a_0/100)
+    #     classified = test_tf(test_tweet, train_city_dict, train_city_prob, unique_word_length, a_0/100)
+    #     error.append(get_error(classified, test_label))
+    #
+    # plt.plot(a, error, marker='o', linestyle='--', color='r', label='Naive Bayes Classifier')
+    # plt.ylabel('Error rate')
+    # plt.xlabel('Smoothing parameter')
+    # plt.legend()
+    # plt.savefig('Smoothing parameter & Error rate.png')
+    # plt.show()
+
+
 if __name__ == '__main__':
     main()
-
-
-# # print a,error
-# # plt.plot(a, error, marker='o', linestyle='--', color='r', label='Insertion Sort')
-# # plt.gca().invert_xaxis()
-# # plt.gca().set_xlim([1,0.00000001])
-# # plt.show()
-# # plt.plot(data_size, runtime_2, marker='o', linestyle='--', color='b', label='Merge Sort')
-# # plt.plot(data_size, runtime_3, marker='o', linestyle='--', color='g', label='Quick Sort')
-# # plt.ylabel('Runtime')
-# # plt.xlabel('Input Size')
-# # plt.title('Plot2')
-# # plt.legend()
-# # plt.savefig('Insertion & Merge & Quick plot2.png')
-# # plt.show()
-#
