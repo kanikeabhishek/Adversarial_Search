@@ -1,33 +1,45 @@
 #!/usr/bin/env python
 
+# Since in the question, we've already made the assumption,
+# which says that for any i != j, w_i is independent from w_j given L.
+# I'm implementing the model using multinomial Naive Bayes classifier
+# Since
+
 from __future__ import division
+#0.396
 import string
 import re
-
-train_file = 'tweets.train.txt'
-test_file = 'tweets.test1.txt'
-output_file = 'tweet.output.txt'
-debug_file_name = 'debug.txt'
-cities = ('Los_Angeles,_CA', 'San_Francisco,_CA', 'Manhattan,_NY','San_Diego,_CA', 'Houston,_TX', 'Chicago,_IL',
-                 'Philadelphia,_PA', 'Toronto,_Ontario', 'Atlanta,_GA','Washington,_DC', 'Orlando,_FL', 'Boston,_MA')
+import math
+import copy
+import heapq
+import sys
+#from nltk.corpus import stopwords
+#cachedStopWords = stopwords.words("english")
 
 
 # filter all ASCII and symbols
 # Return a lists of words for each tweet
 def tokenization(tweet):
-    return re.sub(r'\W_', ' ', filter(lambda x: x in string.printable, tweet.lower())).split()
+
+    tweet= re.sub('[$%|<>;^&*+={}~@,:()[\]_/\-".]', '', filter(lambda x: x in string.printable, tweet.lower())).split()
+    tweet = filter(lambda a: a not in filtered_words, tweet)
+    #print tweet
+    return tweet
 
 
-# read the file and split valid tweet into two lists
-# One is all the location name, and another is
+# read the file and split valid tweet into 3 lists
+# Return the location name, tokenized word list, original tweets
+
 def clean_data(filename):
     classified_cities = []
     tweet_content = []
+    origin_tweet = []
     for tweet in open(filename).readlines():
         if tweet.startswith(cities): # check if its a valid tweet
             each_tweet = tweet.split(' ', 1)
             classified_cities.append(each_tweet[0])
             tweet_content.append(tokenization(each_tweet[1]))
+    #print origin_tweet
     return classified_cities, tweet_content
 
 
@@ -37,6 +49,7 @@ def filter_frequency(city_dict,n):
         city_dict[city][1]={k: v for (k, v) in city_dict[city][1].items() if v > n} # filter word frequency > n
     return city_dict
 
+
 # return the probability of each city into a dict
 def city_prob(city_dict):
     city_prob_dict ={}
@@ -44,6 +57,11 @@ def city_prob(city_dict):
     for city in city_dict:
         city_prob_dict[city] = city_dict[city][0]/tweet_total
     return city_prob_dict
+
+
+# get the total number of tweets in the dataset
+def get_tweet_total(city_dict):
+    return sum(item[0] for item in city_dict.values())
 
 
 # return total unique word of all words into a set
@@ -76,25 +94,39 @@ def train(classified_cities,tweet_content):
 # using multinomial Naive Bayes
 def test_tf(word_list,train_dict,train_prob_dict,total_unique_words_length,a):
     classified_city = []
+    top_dict={}
     for wordlist in word_list:
         # print wordlist
         max_p = 0
         # print city_prob_dict
         for city in cities:
+            top_dict[city] = {}
             # print city
             p = train_prob_dict[city]
             # print p
             for word in wordlist:
                 try:
-                    p *= (train_dict[city][1][word] + a) / (len(train_dict[city][1]) + a * total_unique_words_length)
+                    top_dict[city][word] = (train_dict[city][1][word] + a) / (len(train_dict[city][1]) + a * total_unique_words_length)
+                    p *= top_dict[city][word]
                 except KeyError:
                     p *= a / (len(train_dict[city][1]) + a * total_unique_words_length)
             if p >= max_p:
                 max_p = p
                 new = [p, city]
         classified_city.append(new[1])
-    return classified_city
+    return classified_city,top_dict
 
+
+# get inverse document frequency count
+def get_idf(city_dict,word,tweet_content):
+    count = 0
+    #print tweet_content
+    for tweet in tweet_content:
+        if word in tweet:
+            count +=1
+    return count
+
+# test using tf-idf model
 def test_tfidf(word_list,train_dict,train_prob_dict,total_unique_words_length,a):
     classified_city = []
     for wordlist in word_list:
@@ -107,9 +139,11 @@ def test_tfidf(word_list,train_dict,train_prob_dict,total_unique_words_length,a)
             # print p
             for word in wordlist:
                 try:
-                    p *= (train_dict[city][1][word]/sum(train_dict[city][1].values()) + a) / (len(train_dict[city][1]) + a * total_unique_words_length)
+                    # calculate the tf-idf
+                    p *= (train_dict[city][1][word]/math.sqrt(sum(train_dict[city][1].values()))) * math.log(tweet_total/(get_idf(train_dict,word,train_tweet)+1))
                 except KeyError:
-                    p *= a / (len(train_dict[city][1]) + a * total_unique_words_length)
+                    #print len(train_dict[city][1].keys())
+                    p *= 1/math.sqrt(sum(train_dict[city][1].values())) * math.log(tweet_total/(get_idf(train_dict,word,train_tweet)+1))
             if p >= max_p:
                 max_p = p
                 new = [p, city]
@@ -117,25 +151,114 @@ def test_tfidf(word_list,train_dict,train_prob_dict,total_unique_words_length,a)
     return classified_city
 
 
+# get the error rate
+def get_error(classified_list, test_label):
+    count = 0
+    for n in range(len(classified_list)):
+        # print classify[n], list_2[n]
+        if classified_list[n] != test_label[n]:
+            count += 1
+    return 'error rate: ' +  str(count / len(classified_list))
 
 
-#print clean_data(train_file)[1]
+def write_output(original_file,filename,classified_list):
+    with open(filename, 'w') as output:
+        with open(original_file) as f:
+            for tweet in f.readlines():
+                if tweet.startswith(cities):
+                    #tweet = classified_list.pop(0)+' '+tweet
+                    #print classified_list
+                    output.write(classified_list.pop(0)+' '+tweet)
+        f.close()
+    output.close()
+
+# to get the probability for each word in each city
+def get_distribution(city_dict,a):
+    for city in cities:
+        city_dict[city] = city_dict[city][1]
+        for word in city_dict[city]:
+            city_dict[city][word]=(city_dict[city][word]+a) / (len(city_dict[city]) + a * unique_word_length)
+    return city_dict
+
+def top5(city_dict):
+    for city in city_dict:
+        #print city_dict.get(city)
+        k_keys_sorted = heapq.nlargest(5, city_dict[city],key=city_dict[city].get)
+        # for x in k_keys_sorted:
+        #     print city_dict[city][x]
+        print city, k_keys_sorted
+
 
 def main():
 
-    train_city_dict = filter_frequency(train(*clean_data(train_file)),0)
+    #declare a filtered word list, which need to be remove from the dataset
+    # a city list contains all 12 city names
+    global filtered_words
+    global cities
+
+    filtered_words = ['1','2','3','4','5','6','7','8','9','0',
+                      'we', 'me', 'be', 'the', 'that', 'to', 'as', 'there',
+                      'has', 'have', 'and', 'or', 'is', 'not', 'a', 'of',
+                      'my', 'this', 'at', 'our', 'you', 'with', "i'm", 'i',
+                      'but', 'in', 'by', 'on', 'are', 'it', 'if', 'for', 'from',
+                      'with', "we're", 'latest', 'click', 'out', 'just', 'st',
+                      'opening', 'up', 'see', '&amp;', 'great', '#hiring', 'can',
+                      'here', 'work', 'want', 'so', 'day', 'trucks', 'avenue',
+                      '#job', '#jobs', '#careerarc','amp','apply','was','were',
+                      'center',"it's",'anyone','about','#job?','recommend','west',
+                      'bw','fit','#hospitality','#hiring!','request','#nursing',
+                      '#healthcare','an','us','one','how',"don't",'these','do',
+                      'your', 'all', 'night','get','when', 'what','park','street',
+                      'love','time','dr', 'rd','via','case','now','good','s', 'n',
+                      'w','go','like', 'bar','today','#it','happy','view','home',
+                      'game', '#sales', 'drinking', 'back', 'opened', 'read',
+                      'manager', 'details','iphone', 'parking', "you're", 'might',
+                      'could','photo','health', 'join', 'near', 'interested',
+                      'nurse','team!','city', 'care', '#veterans', 'resolved',
+                      'closed', 'baths', 'registered', '#retail', 'stop', '#photo',
+                      'first', 'united', 'food','south', 'check','more','tonight',
+                      'been','#nowhiring','ready', 'clear', 'got','ave','last',
+                      'off','weekend', 'services', 'still', 'than','little', 'know',
+                      'best', 'world', 'real','blvd', 'minute', 'delay', 'mins',"come"]
+
+    cities = ('Los_Angeles,_CA', 'San_Francisco,_CA', 'Manhattan,_NY', 'San_Diego,_CA', 'Houston,_TX', 'Chicago,_IL',
+              'Philadelphia,_PA', 'Toronto,_Ontario', 'Atlanta,_GA', 'Washington,_DC', 'Orlando,_FL', 'Boston,_MA')
+
+    #train_file = 'tweets.train.txt'
+    train_file = sys.argv[1]
+    #test_file = 'tweets.test1.txt'
+    test_file = sys.argv[2]
+    #output_file = 'tweet.output.txt'
+    output_file = sys.argv[3]
+    debug_file_name = 'debug.txt'
+
+    train_city_dict = filter_frequency(train(*clean_data(train_file)), 0)
     train_city_prob = city_prob(train_city_dict)
+    global unique_word_length
     unique_word_length= len(get_unique_word(train_city_dict))
-    test_classified, test_tweet = clean_data(test_file)
-    classified = test_tf(test_tweet,train_city_dict,train_city_prob,unique_word_length,0.017)
+    test_label, test_tweet = clean_data(test_file)
+    classified, top_dict = test_tf(test_tweet, train_city_dict, train_city_prob, unique_word_length, 0.04)
+    print get_error(classified, test_label)
 
-    count =0
-    for n in range(len(classified)):
-        #print classify[n], list_2[n]
-        if classified[n] != test_classified[n]:
-            count +=1
-    print 'error', count/len(classified)
 
+    global train_tweet
+    train_tweet= clean_data(train_file)[1]
+
+    global tweet_total
+    tweet_total = get_tweet_total(train_city_dict)
+
+
+
+
+
+    new_dict = copy.deepcopy(train_city_dict)
+    new_dict=get_distribution(new_dict,0.04)
+    top5(new_dict)
+
+    #print len(classified),len(test_label), len(test_tweet)
+
+    write_output(test_file,output_file,classified)
+    #print top_dict
 if __name__ == '__main__':
     main()
 # # print a,error
