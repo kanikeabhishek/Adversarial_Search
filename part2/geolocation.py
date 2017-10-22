@@ -13,7 +13,7 @@
 # If the line was started with a city, the training set was split into a city_list and
 # a tweet_list. For each tweet in the tweet_list, we removed selected symbols
 # '$%|<>;^&*+={}~@,:()[\]_/\-".' , and remove word that appears in the filtered_word list.
-# Some symbol was not included, like '#' and '?', because by removing those will lower the accuracy.
+# Some symbol was not included(like '#'), because by removing those will lower the accuracy.
 # The filtered_word list includes stop words, and also words with high frequency in every location,
 # and by removing these words, the accuracy wouldn't be affected or we would get a better accuracy
 # on the test set.
@@ -21,20 +21,47 @@
 # better accuracy will be given if no threshold set.
 #
 # Model Training
-# The next step is to train the model
+# The next step is to train the model. with the training set, I construct a nested dictionary.
+# Format like this: # {city: [number of location appears in the training set, {word: occurrence count} ]}
+# (Instead of calculate the distribution while training, I calculated the probability while apply
+# to testing data, which I think can help to avoid unnecessary loops)
+# While I have the dictionary, I can calculate the probability for each city, and also a set contains
+# all unique word in the training set.
+#
+# Classify testing data
+# I used two method to classify the data based on this blog:
+# http://sebastianraschka.com/Articles/2014_naive_bayes_1.html.
+#
+# One is the term frequency, which calculates P(w|L) using
+# (word count in each location + a )/ (The total number of words in a location + a*total number of all distinct words)
+# where 'a' is the smoothing parameter. It is set to 0.04 for the best results. The classifier
+# takes 3.89108490944 second (including training and classifying), and return the accuracy of 0.702
+# (It could increase to 0.704 if we include the symbol ')', but I don't find a reasonable explanation to keep it).
+#
+# The other one is tf-idf, which calculates weighted term frequency. First, I normalized the
+# term frequency, by dividing the (word count in each location) with sqrt(The total number of terms in a location).
+# Then calculate the idf using log(the total number of tweets/the number of tweets contain the word)
+# Finally multiply the normalized term frequency and idf.
+# The classifier takes 287.782369852 second (including training and classifying), and return the accuracy of 0.624.
+#
+# Consider the accuracy and running time, term frequency method will be used to classify the testing data.
+#
+# Output
+# The top 5 words associated with each of the 12 locations are the words with highest P(w|L=l) for each location.
+# Most of the words associate with the location are the abbreviation or nickname, or the state name of the city.
 
 from __future__ import division
-#0.396
 import string
 import re
 import math
 import copy
 import heapq
 import sys
+import time
 #from nltk.corpus import stopwords
 #cachedStopWords = stopwords.words("english")
 
-
+start = time.time()
 # filter selected symbols, and words
 # Return a lists of words for each tweet
 def tokenization(tweet):
@@ -110,27 +137,25 @@ def train(classified_cities,tweet_content):
 # using multinomial Naive Bayes
 def test_tf(word_list,train_dict,train_prob_dict,total_unique_words_length,a):
     classified_city = []
-    top_dict={}
     for wordlist in word_list:
         # print wordlist
         max_p = 0
         # print city_prob_dict
         for city in cities:
-            top_dict[city] = {}
             # print city
             p = train_prob_dict[city]
             # print p
             for word in wordlist:
                 try:
-                    top_dict[city][word] = (train_dict[city][1][word] + a) / (len(train_dict[city][1]) + a * total_unique_words_length)
-                    p *= top_dict[city][word]
+
+                    p *= (train_dict[city][1][word] + a) / (len(train_dict[city][1]) + a * total_unique_words_length)
                 except KeyError:
                     p *= a / (len(train_dict[city][1]) + a * total_unique_words_length)
             if p >= max_p:
                 max_p = p
                 new = [p, city]
         classified_city.append(new[1])
-    return classified_city,top_dict
+    return classified_city
 
 
 # get inverse document frequency count
@@ -235,7 +260,8 @@ def main():
                       'first', 'united', 'food','south', 'check','more','tonight',
                       'been','#nowhiring','ready', 'clear', 'got','ave','last',
                       'off','weekend', 'services', 'still', 'than','little', 'know',
-                      'best', 'world', 'real','blvd', 'minute', 'delay', 'mins',"come"]
+                      'best', 'world', 'real','blvd', 'minute', 'delay', 'mins',"come",
+                      'job','hiring','jobs','job?','careerarc']
 
     cities = ('Los_Angeles,_CA', 'San_Francisco,_CA', 'Manhattan,_NY', 'San_Diego,_CA', 'Houston,_TX', 'Chicago,_IL',
               'Philadelphia,_PA', 'Toronto,_Ontario', 'Atlanta,_GA', 'Washington,_DC', 'Orlando,_FL', 'Boston,_MA')
@@ -248,35 +274,41 @@ def main():
     output_file = sys.argv[3]
     debug_file_name = 'debug.txt'
 
+
+    # train the model
     train_city_dict = train(*clean_data(train_file))
     train_city_prob = city_prob(train_city_dict)
     global unique_word_length
     unique_word_length= len(get_unique_word(train_city_dict))
-    test_label, test_tweet = clean_data(test_file)
-    classified, top_dict = test_tf(test_tweet, train_city_dict, train_city_prob, unique_word_length, 0.04)
-    print get_error(classified, test_label)
 
-
+    # use for tf-idf model
     global train_tweet
-    train_tweet= clean_data(train_file)[1]
-
+    train_tweet = clean_data(train_file)[1]
     global tweet_total
     tweet_total = get_tweet_total(train_city_dict)
 
+    # Classify
+    a= 0.04
+    test_label, test_tweet = clean_data(test_file)
+    classified= test_tf(test_tweet, train_city_dict, train_city_prob, unique_word_length, a)
+    #print get_error(classified, test_label)
 
 
-
-
+    # print the top 5 associated word
     new_dict = copy.deepcopy(train_city_dict)
-    new_dict=get_distribution(new_dict,0.04)
+    new_dict=get_distribution(new_dict,a)
     top5(new_dict)
 
-    #print len(classified),len(test_label), len(test_tweet)
 
+    # write to file
     write_output(test_file,output_file,classified)
-    #print top_dict
+    #print time.time()-start
+
+
 if __name__ == '__main__':
     main()
+
+
 # # print a,error
 # # plt.plot(a, error, marker='o', linestyle='--', color='r', label='Insertion Sort')
 # # plt.gca().invert_xaxis()
