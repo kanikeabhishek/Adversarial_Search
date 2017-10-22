@@ -1,9 +1,27 @@
 #!/usr/bin/env python
 
-# Since in the question, we've already made the assumption,
-# which says that for any i != j, w_i is independent from w_j given L.
-# I'm implementing the model using multinomial Naive Bayes classifier
-# Since
+# Model Selection
+# In the question, we've already made the naive assumption, which says that for any i != j,
+# w_i is independent from w_j given L. Multinomial Naive Bayes classifier was used to build
+# the model. The reason we use multinomial instead of bernoulli is because we think the
+# frequency of a word contained in different location matters. For example, if there was
+# an event happened in one city, and became viral in the whole north america.
+# We can see the keyword from all of the cities, but usually the city where it happened
+# should have more tweets, and a larger weight should be assigned to it.
+
+# Data Cleaning
+# If the line was started with a city, the training set was split into a city_list and
+# a tweet_list. For each tweet in the tweet_list, we removed selected symbols
+# '$%|<>;^&*+={}~@,:()[\]_/\-".' , and remove word that appears in the filtered_word list.
+# Some symbol was not included, like '#' and '?', because by removing those will lower the accuracy.
+# The filtered_word list includes stop words, and also words with high frequency in every location,
+# and by removing these words, the accuracy wouldn't be affected or we would get a better accuracy
+# on the test set.
+# A function to filter the frequency of words was barely used was not used simply because
+# better accuracy will be given if no threshold set.
+#
+# Model Training
+# The next step is to train the model
 
 from __future__ import division
 #0.396
@@ -17,14 +35,12 @@ import sys
 #cachedStopWords = stopwords.words("english")
 
 
-# filter all ASCII and symbols
+# filter selected symbols, and words
 # Return a lists of words for each tweet
 def tokenization(tweet):
-
-    tweet= re.sub('[$%|<>;^&*+={}~@,:()[\]_/\-".]', '', filter(lambda x: x in string.printable, tweet.lower())).split()
-    tweet = filter(lambda a: a not in filtered_words, tweet)
-    #print tweet
-    return tweet
+    return filter(lambda a: a not in filtered_words,
+                  re.sub('[$%|<>;^&*+={}~@,:()[\]_/\-".]',
+                         '', filter(lambda x: x in string.printable, tweet.lower())).split())
 
 
 # read the file and split valid tweet into 3 lists
@@ -205,7 +221,7 @@ def main():
                       'opening', 'up', 'see', '&amp;', 'great', '#hiring', 'can',
                       'here', 'work', 'want', 'so', 'day', 'trucks', 'avenue',
                       '#job', '#jobs', '#careerarc','amp','apply','was','were',
-                      'center',"it's",'anyone','about','#job?','recommend','west',
+                      'center',"it's",'anyone','about','#job?','recommend',
                       'bw','fit','#hospitality','#hiring!','request','#nursing',
                       '#healthcare','an','us','one','how',"don't",'these','do',
                       'your', 'all', 'night','get','when', 'what','park','street',
@@ -232,7 +248,7 @@ def main():
     output_file = sys.argv[3]
     debug_file_name = 'debug.txt'
 
-    train_city_dict = filter_frequency(train(*clean_data(train_file)), 0)
+    train_city_dict = train(*clean_data(train_file))
     train_city_prob = city_prob(train_city_dict)
     global unique_word_length
     unique_word_length= len(get_unique_word(train_city_dict))
