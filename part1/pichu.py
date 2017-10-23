@@ -1,4 +1,25 @@
 #!/usr/bin/python2.7
+
+
+'''Challenges
+The trade-off between depth and time was the most challenging task which we had to face. When BlueJay,Queztal and Robin
+were out in the center the number of successors were many and expanding each of the successors was time consuming. Inorder to
+overcome this problem we generated successors based on their evaluation function values. Successors for each piece
+which had the maximum(max turn)/mininum(min turn) evaluation function value were taken for the next depth.Thereby decreasing
+the number of successors generated. We also came up with memoization technique where in we evaluate the board only once and
+stored it in a dictionary and this can be used to get evaluation function for the subsequent calls. This reduce the time
+required for expansion of the successors. Memoization came out to be the better solution for this problem.
+
+Improvements
+Although dynamic programming is reducing the running time, for some board configuration the running time is still high.
+Once soluion to this problem is to reduce the depth and have a stronger evaluation function. Material evaluation function
+simply counts the number of pieces and plays a defensive game. While calculating the favourability of a board the postion
+of each of the piece should also be taken into consideration. For example, NightHawk has many options when in the center
+of the board than in the corners and its weight can be increased..Certain board configurations such as the one where
+there are two BlueJays are more favorable since they cover both black and white squares.Improvements to the evaluation
+function gives the freedom of decreasing the depth thereby decreasing the running time.
+
+'''
 import sys
 import copy
 
