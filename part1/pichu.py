@@ -1,7 +1,48 @@
 #!/usr/bin/python2.7
+'''
+The program is similar to the classical chess game apart from the stated rules that there wont be en passant,
+castling and check/checkmates. Following is the abstraction model that we followed.
+    Initial State: 8 * 8 board configuaration given in one line provide by user.
+    Successor Function: Board configuration represented as every possible movement of a piece (Parakeeth, Robin,
+                        BlueJay, Night, Quetzal and Kingfisher).
+    Cost function: There is not cost function involved. Either player should win or loose.
 
+Program accepts three command line parameters:
+1) Players turn
+2) Intial board configuration
+3) Time within which next move the program should output.
+The board configuration is saved as a 2-d array with top two row occupied by white birds and last two rows by black birds
+`player` bool variable is passed throughout the program, True value is used for players {White | Black} turn given as user
+input and False value represents other player {Black | White}.
 
-'''Challenges
+The program plays against the opponent, evaluates the board state at depth 4 using material evaluation (heuristic) function.
+
+Algorithm used for generating optimal move.
+-> Alpha Beta Pruning: As a result of evaluating the state of board at depth = 4, it can be found that a portion of the search
+tree can be ignored as no further evaluations can guarantee better results. This can happen because white and black area
+against one another. White plays what is best for it and black plays what is best for it, so it would make sense for white
+to ignore any portion of the tree where black has a clear upperhand that it can choose to play.
+NOTE: If black is the player turn provided by user then, material function value is multiplied by -1 so the evaluation
+rules are negated from white to black.
+-> Visited Array: Often, two different pathways, in a search tree can result in the same board being evaluated. Instead of
+repeating the same calculations again, the program stores a table of values in a dictionary where keys are string format of
+2-d board configuration. This is similar to dynamic programming approach called `memoization`.
+
+In order to walk in the tree to seach an optimal result, program should know to evaluate board configuration to decide
+which player has advantage over other. Hence, two evaluation functions are used:
+-> Material evaluation function: Each piece (White and Black) has a value and the more pieces you have, the better off your
+                                 position is likely to be. For example, if white has an extra queen, it has an advantage
+                                 over black. The program assumes best play from either side as it traverses up the search
+                                 tree and chooses the best move to be played. A problem that will arise is the number of
+                                 postions that need to be evaulated. Even at 4 levels of depth, thousands of positions have
+                                 to be evaluatd. This function is effective since the game will follow a defensive come
+                                 attacking strategy, i.e the function will prevent form loosing user pieces based on weight
+                                 and attack again based on how much worth will it be to capture opponent piece.
+-> King capture: Min_value and Max_value checks whether its king is captured. If MAX node king is captured alpha value of
+                 -INFINITY is retured depicting that MAX (user) will( or has lost )the game and +INFINITY by MIN saying
+                  user has (or will) the game.
+
+Challenges
 The trade-off between depth and time was the most challenging task which we had to face. When BlueJay,Queztal and Robin
 were out in the center the number of successors were many and expanding each of the successors was time consuming. Inorder to
 overcome this problem we generated successors based on their evaluation function values. Successors for each piece
@@ -21,8 +62,8 @@ function gives the freedom of decreasing the depth thereby decreasing the runnin
 
 Pruning can be also improved by generating the successors in certain order such a way the alpha becomes greater than beta
 without traversing many successors in our game tree.
-
 '''
+
 import sys
 import copy
 
@@ -30,20 +71,26 @@ INF = 99999999999
 MAXDEPTH = 4
 WHITE = ['P','R','B','Q','K','N'];
 BLACK = ['p','r','b','q','k','n'];
+# MATERIAL Weight
 PIECE_WEIGHT = {
     'P': 1, 'p': -1, 'R': 5, 'r': -5, 'B': 3, 'b': -3, 'N': 3, 'n': -3, 'Q': 9, 'q': -9, 'K': 100, 'k': -100
 }
 
+# An array representing opponent player array (White or Black)
 opposition = []
+# Data structure used to store possible successor from a given state
 frontier = []
+# Visited array storing values of a state visited.
 visited = {}
 
+# Print Human readable board format
 def printable_board(board):
     for row in board:
         print(row)
     print("--------------------------------------------------------------------------------------")
     pass
 
+# Check whether a parakeeth can be placed in (row, col)
 def isValidForParakeeth(board, row, col, i, player):
     if (row >= 0 and row <= 7 and col >= 0 and col <= 7):
         if i == 3:
@@ -59,6 +106,8 @@ def isValidForParakeeth(board, row, col, i, player):
             return True
     return False
 
+# Check whether any piece from (Robin, Bluejay, Night, Queen and King) can be placed in (row, col)
+# Disable a move of respective piece if another blocks its way (row_list/col_list*=100)
 def isValidorDisbale(board, row, col, row_list, col_list, i):
     if (row >= 0 and row <= 7 and col >= 0 and col <= 7):
         if board[row][col] == ".":
@@ -69,6 +118,7 @@ def isValidorDisbale(board, row, col, row_list, col_list, i):
         else:
             return False
 
+# Generate all possible moves from each piece given a board of a player
 def generatesuccessor(board, player):
     global frontier
     frontier = []
@@ -88,16 +138,18 @@ def generatesuccessor(board, player):
             elif(board[row][col] == b):
                 move_bluejay(board, b, row, col)
             elif(board[row][col] == q):
-                move_queztal(board, q, row, col)
+                move_quetzal(board, q, row, col)
             elif(board[row][col] == k):
                 move_kingfisher(board, k, row, col)
             elif(board[row][col] == n):
                 move_nighthawk(board, n, row, col)
     return frontier
 
+# Return a new board with piece added at (row, col)
 def add_piece(board, row, col, piece):
     return board[0:row] + [board[row][0:col] + [piece,] + board[row][col+1:]] + board[row+1:]
 
+# Move Parakeeth at (row, col)
 def move_parakeeth(board, p, row, col):
     if p in BLACK:
         q = 'q'
@@ -123,6 +175,7 @@ def move_parakeeth(board, p, row, col):
                 new_board = add_piece(new_board, row1, col1, p)
             frontier.append(new_board)
 
+# Generic function to move a bird from (row, col) to (row1, col1)
 def moveBird(board, row, col, possible_row, possible_col, possible_moves, iterations, bird):
     for i in range(possible_moves):
         for j in range(1, iterations):
@@ -133,31 +186,45 @@ def moveBird(board, row, col, possible_row, possible_col, possible_moves, iterat
                 new_board = add_piece(new_board, row1, col1, bird)
                 frontier.append(new_board)
 
-def move_queztal(board, q, row, col):
+# Build each move for Quetzal starting from (row+0, col+0).
+# . .    .       .     .      . . .
+# . .    .       .     .      . . .
+# . .    .       .     .      . . .
+# . . (+1,-1) (+1,+0) (+1,+1) . . .
+# . . (+0,-1) (+0,+0) (+0,+1) . . .
+# . . (-1,-1) (-1,+0) (-1,+1) . . .
+# . .    .       .     .      . . .
+# . .    .       .     .      . . .
+def move_quetzal(board, q, row, col):
     Queztal_Row = [1, 1, 1, 0, -1, -1, 0, -1]
     Queztal_Col = [1, 0,-1, 1, -1, 0, -1, 1]
     moveBird(board, row, col, Queztal_Row, Queztal_Col, len(Queztal_Row), 8, q)
 
+# Build each move for Bluejay
 def move_bluejay(board, b, row, col):
     BlueJay_Row = [-1, -1, 1, 1]
     BlueJay_Col = [-1, 1, 1, -1]
     moveBird(board, row, col, BlueJay_Row, BlueJay_Col, len(BlueJay_Row), 8, b)
 
+# Build each move for Robin
 def move_robin(board, r, row, col):
     Robin_Row = [0, -1, 0, 1]
     Robin_Col = [-1, 0, 1, 0]
     moveBird(board, row, col, Robin_Row, Robin_Col, len(Robin_Row), 8, r)
 
+# Build each move for KingFisher
 def move_kingfisher(board, k, row, col):
     KingFisher_Row = [1, 1, 1, 0, -1, -1, -1, 0]
     KingFisher_Col = [-1, 0, 1, 1, 1, 0, -1, -1]
     moveBird(board, row, col, KingFisher_Row, KingFisher_Col, len(KingFisher_Row), 2, k)
 
+# Build each move for Nighthawk
 def move_nighthawk(board, n, row, col):
     NightHawk_Row = [1, 2, 2, 1, -1, -2, -2, -1]
     NightHawk_Col = [-2, -1, 1, 2, 2 ,1, -1, -2]
     moveBird(board, row, col, NightHawk_Row, NightHawk_Col, len(NightHawk_Row), 2, n)
 
+# Check whether king is captured
 def iskingcaptured(board, player):
     if(player):
         king = 'K'
@@ -169,6 +236,7 @@ def iskingcaptured(board, player):
                 return False
     return True
 
+# Alpha beta pruning algorithm
 def alpha_beta_decision(initial_board, player):
     maxi = -INF
     state = []
@@ -179,6 +247,7 @@ def alpha_beta_decision(initial_board, player):
             maxi = beta
     return state
 
+# Generate Max nodes (favourable moves for user)
 def max_value(state, depth, alpha, beta, player):
     if(iskingcaptured(state, player)):
         return -INF
@@ -199,6 +268,7 @@ def max_value(state, depth, alpha, beta, player):
                 return alpha
     return alpha
 
+# Generate Min nodes (worst moves for user)
 def mini_value(state, depth, alpha, beta, player):
 
     if(iskingcaptured(state, player)):
@@ -220,6 +290,7 @@ def mini_value(state, depth, alpha, beta, player):
                 return beta
     return beta
 
+# Material Heuristic evaluation function calculating based on bird weights
 def material_evaluation(board):
     value = 0
     for row in range(0, 8):
@@ -228,6 +299,7 @@ def material_evaluation(board):
                 value += PIECE_WEIGHT[board[row][col]]
     return value
 
+# Identify the opponent type
 def identify_opponent(player):
     global opposition
 
@@ -236,12 +308,14 @@ def identify_opponent(player):
     else:
         opposition = WHITE
 
+# Create a board as a 2-d array
 def create_board(initial_state):
     board = list();
     for j in range(0,63,8):
         board.append(list(initial_state[j:j+8]))
     return board
 
+# Read input from command linen parameters
 def read_input():
     if (len(sys.argv)<4):
         print ("Please enter three inputs.\n1.Player turn (w 'or' b)\n2.Board configuration\
@@ -252,6 +326,7 @@ def read_input():
     time = int(sys.argv[3])
     return (turn, initial_state, time)
 
+# Validate input from command linen parameters
 def validate_input(initial_state, turn):
     if (len(initial_state) != 64):
         print ("Please enter valid board... Exiting...")
@@ -260,6 +335,7 @@ def validate_input(initial_state, turn):
         print ("Please enter valid player (w 'or' b) turn... Exiting...")
         return -1
 
+# Main function driving the program
 def main():
     (turn, initial_state, time) = read_input()
     inital_board = create_board(initial_state)
