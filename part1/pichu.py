@@ -62,6 +62,9 @@ function gives the freedom of decreasing the depth thereby decreasing the runnin
 
 Pruning can be also improved by generating the successors in certain order such a way the alpha becomes greater than beta
 without traversing many successors in our game tree.
+
+Another way to handle time limit would be to use Iterative Depth First Search where we store the best possible move at
+each depth and we return the best possible move at the maximum depth we reached before the time limit expires.
 '''
 
 import sys
