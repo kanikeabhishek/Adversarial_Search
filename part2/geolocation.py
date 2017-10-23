@@ -60,12 +60,12 @@ import math
 import copy
 import heapq
 import sys
-import time
+#import time
 #from matplotlib import pyplot as plt
 #from nltk.corpus import stopwords
 #cachedStopWords = stopwords.words("english")
 
-start = time.time()
+#start = time.time()
 # filter selected symbols, and words
 # Return a lists of words for each tweet
 def tokenization(tweet):
