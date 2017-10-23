@@ -19,6 +19,9 @@ of the board than in the corners and its weight can be increased..Certain board 
 there are two BlueJays are more favorable since they cover both black and white squares.Improvements to the evaluation
 function gives the freedom of decreasing the depth thereby decreasing the running time.
 
+Pruning can be also improved by generating the successors in certain order such a way the alpha becomes greater than beta
+without traversing many successors in our game tree.
+
 '''
 import sys
 import copy
