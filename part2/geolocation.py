@@ -74,9 +74,8 @@ def tokenization(tweet):
                          '', filter(lambda x: x in string.printable, tweet.lower())).split())
 
 
-# read the file and split valid tweet into 3 lists
-# Return the location name, tokenized word list, original tweets
-
+# read the file and split valid tweet into 2 lists
+# Return the location name, tokenized word list
 def clean_data(filename):
     classified_cities = []
     tweet_content = []
